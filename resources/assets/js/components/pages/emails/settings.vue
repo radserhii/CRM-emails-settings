@@ -1,9 +1,11 @@
 <template>
-    <div class="mt-3">
+    <div class="mt-3 mx-5">
         <h4 class="pl-5 mt-5">Service</h4>
         <div class="line"></div>
         <b-col sm="6">
-            <b-row class="my-3" v-for="setting in settings" :key="setting.id">
+            <span v-if="errorSetting" class="text-danger">{{ errorSetting }}</span>
+            <span v-if="messageSetting" class="text-success">{{ messageSetting }}</span>
+            <b-row align-v="center" class="my-3" v-for="setting in settings" :key="setting.id">
                 <b-col sm="3">
                     <label :for="`setting-${setting.id}`">
                         <b>{{ setting.name | capitalize }}:</b>
@@ -14,17 +16,17 @@
                             :id="`setting-${setting.id}`"
                             :name="setting.name"
                             :value="setting.value"
-                            @change.native="editSetting($event, setting.id)">
+                            @keyup.native.enter="updateSetting($event, setting)"
+                            @blur.native="updateSetting($event, setting)">
                     </b-form-input>
                 </b-col>
             </b-row>
-            <button class="btn btn-primary mr-2" @click="saveSettings">Save</button>
-            <span v-if="errorSetting" class="text-danger">{{ errorSetting }}</span>
-            <span v-if="messageSetting" class="text-success">{{ messageSetting }}</span>
         </b-col>
         <h4 class="pl-5 mt-5">Events</h4>
         <div class="line"></div>
         <b-col sm="8">
+            <span v-if="errorAction" class="text-danger">{{ errorAction }}</span>
+            <span v-if="messageAction" class="text-success">{{ messageAction }}</span>
             <b-row class="my-3">
                 <b-col sm="3">
                     <b>Name</b>
@@ -36,7 +38,7 @@
                     <b>Sender</b>
                 </b-col>
             </b-row>
-            <b-row class="my-3" v-for="action in actions" :key="action.id">
+            <b-row align-v="center" class="my-3" v-for="action in actions" :key="action.id">
                 <b-col sm="3">
                     {{ action.name | capitalize | formatActionName}}
                 </b-col>
@@ -45,54 +47,57 @@
                                    color="#82C7EB"
                                    :sync="true"
                                    :labels="true"
-                                   @change="toggleActionHandler($event, action.id)">
+                                   @change="toggleActionHandler($event, action)">
                     </toggle-button>
                 </b-col>
                 <b-col sm="6">
                     <b-form-input
                             type="email"
                             :value="action.sender || getDefaultEmailSender"
-                            @change.native="editActionSender($event, action.id)">
+                            @keyup.native.enter="updateActionSender($event, action)"
+                            @blur.native="updateActionSender($event, action)">
                     </b-form-input>
                 </b-col>
             </b-row>
-            <button class="btn btn-primary mr-2" @click="saveActions">Save</button>
-            <span v-if="errorAction" class="text-danger">{{ errorAction }}</span>
-            <span v-if="messageAction" class="text-success">{{ messageAction }}</span>
         </b-col>
     </div>
 </template>
 
 <script>
     import {mapState, mapGetters} from 'vuex'
-    import ToggleButton from '../../Button'
+    import ToggleButton from '../../common/Button'
 
     export default {
         name: "settings",
         created() {
-            this.$store.dispatch('email/fetchAllSettings');
-            this.$store.dispatch('email/fetchAllActions');
+            this.$store.dispatch('emailSettings/fetchAllSettings');
+            this.$store.dispatch('emailSettings/fetchAllActions');
         },
         computed: {
-            ...mapState('email', ['settings', 'actions', 'messageSetting', 'errorSetting', 'messageAction', 'errorAction']),
-            ...mapGetters('email', ['getDefaultEmailSender'])
+            ...mapState('emailSettings', ['settings', 'actions', 'messageSetting', 'errorSetting', 'messageAction', 'errorAction']),
+            ...mapGetters('emailSettings', ['getDefaultEmailSender'])
         },
         methods: {
-            editSetting(event, id) {
-                this.$store.dispatch('email/editSetting', {id: id, value: event.target.value});
+            updateSetting(event, setting) {
+                if(event.type === 'keyup') event.target.blur();
+                this.$store.dispatch('emailSettings/editSetting', {id: setting.id, value: event.target.value});
+                this.saveSettings();
             },
             saveSettings() {
-                this.$store.dispatch('email/saveSettings');
+                this.$store.dispatch('emailSettings/saveSettings');
             },
-            toggleActionHandler(event, id) {
-                this.$store.dispatch('email/toggleAction', {id: id, value: event.value});
+            toggleActionHandler(event, action) {
+                this.$store.dispatch('emailSettings/toggleAction', {id: action.id, value: event.value});
+                this.saveActions()
             },
-            editActionSender(event, id) {
-                this.$store.dispatch('email/editActionSender', {id: id, value: event.target.value});
+            updateActionSender(event, action) {
+                if(event.type === 'keyup') event.target.blur();
+                this.$store.dispatch('emailSettings/editActionSender', {id: action.id, value: event.target.value});
+                this.saveActions()
             },
             saveActions() {
-                this.$store.dispatch('email/saveActions');
-            }
+                this.$store.dispatch('emailSettings/saveActions');
+            },
         },
         filters: {
             formatActionName(value) {
@@ -106,10 +111,15 @@
     }
 </script>
 
-<style scoped>
+<style>
     h4 {
+        font-family: Realway;
         color: #8a8484;
         font-weight: bold;
+    }
+
+    p {
+        font-family: Realway;
     }
 
     .line {

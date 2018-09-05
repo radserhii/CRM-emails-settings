@@ -25,7 +25,7 @@ const actions = {
                 commit('setSettings', response.data);
             })
             .catch((error) => {
-                commit('setError', error.message);
+                commit('setSettingError', error.message);
             })
     },
     editSetting({commit}, payload) {
@@ -35,7 +35,6 @@ const actions = {
         axios.post('/emails/settings', {
             settings: state.settings
         }).then((response) => {
-            commit('setSettingMessage', response.data.message);
         }).catch((error) => {
             commit('setSettingError', error.message);
         })
@@ -47,7 +46,7 @@ const actions = {
                 commit('setActions', response.data);
             })
             .catch((error) => {
-                commit('setError', error.message);
+                commit('setActionError', error.message);
             })
     },
     toggleAction({commit}, payload) {
@@ -60,7 +59,6 @@ const actions = {
         axios.post('/emails/actions', {
             actions: state.actions
         }).then((response) => {
-            commit('setActionMessage', response.data.message);
         }).catch((error) => {
             commit('setActionError', error.message);
         })

@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import email from './modules/email'
+import emailSettings from './modules/email/email-settings'
+import emailTemplates from './modules/email/email-templates'
 
 Vue.use(Vuex);
 
@@ -8,7 +9,8 @@ const debug = process.env.NODE_ENV !== 'production';
 
 export default new Vuex.Store({
     modules: {
-        email
+        emailSettings,
+        emailTemplates
     },
     strict: debug
 })
